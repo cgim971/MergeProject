@@ -35,7 +35,7 @@ namespace Gmae.Firebase
         {
             _auth = FirebaseAuth.DefaultInstance;
 
-            if(_auth .CurrentUser != null)
+            if (_auth.CurrentUser != null)
             {
                 LogOut();
             }
@@ -44,31 +44,35 @@ namespace Gmae.Firebase
         }
 
 
-
         private void OnChanged(object sender, EventArgs e)
         {
-            if (_auth.CurrentUser != _user)
+            // 이전 상태와 같으면 반환
+            if (_auth.CurrentUser == _user)
+                return;
+
+            // true면 로그인 된 상태
+            bool isSigned = _auth.CurrentUser != null;
+
+            // false면 로그인 된 상태가 아니다
+            // _user가 null이 아니면 로그 아웃 상태
+            if (isSigned == false && _user != null)
             {
-                bool isSigned = (_auth.CurrentUser == _user && _auth.CurrentUser != null);
+                _user = null;
+                LoginState?.Invoke(false);
+                return;
+            }
 
-                if (isSigned == false && _user != null)
-                {
-                    Debug.Log("로그아웃");
-                    LoginState?.Invoke(false);
-                }
-
+            if (isSigned == true)
+            {
                 _user = _auth.CurrentUser;
-                if (isSigned == true)
-                {
-                    Debug.Log("로그인");
-                    LoginState?.Invoke(true);
-                }
+                LoginState?.Invoke(true);
+                return;
             }
         }
 
 
 
-        public void Create(string email, string password)
+        public void Register(string email, string password)
         {
             _auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWith(task =>
             {
